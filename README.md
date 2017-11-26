@@ -1,28 +1,85 @@
 # Sidekiq::InfluxDB
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/sidekiq/influxdb`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+[Sidekiq](https://github.com/mperham/sidekiq/wiki) middleware that writes job lifecycle events as points to an [InfluxDB](http://docs.influxdata.com/influxdb/v1.3/) database.
 
 ## Installation
 
-Add this line to your application's Gemfile:
+Add this gem to your application's `Gemfile`:
 
-```ruby
-gem 'sidekiq-influxdb'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install sidekiq-influxdb
+    bundle add sidekiq-influxdb
 
 ## Usage
 
-TODO: Write usage instructions here
+Sidekiq middleware description:
+
+https://github.com/mperham/sidekiq/wiki/Middleware
+
+InfluxDB client description:
+
+https://github.com/influxdata/influxdb-ruby/blob/master/README.md
+
+Add included middleware to your application's Sidekiq middleware stack:
+
+```ruby
+# config/initializers/sidekiq.rb
+
+require "sidekiq/influxdb/server_middleware"
+
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.add Sidekiq::InfluxDB::ServerMiddleware,
+                influxdb_client: InfluxDB::Client.new(options), # REQUIRED
+                series_name: 'sidekiq_jobs',                    # optional, default shown
+                retention_policy: nil                           # optional, default nil
+  end
+end
+```
+
+When you deploy this code, you will start getting the following series in your InfluxDB database:
+
+    > select * from sidekiq_jobs
+    name: sidekiq_jobs
+    time                class  creation_time      error         event  jid                      queue   total              waited              worked
+    ----                -----  -------------      -----         -----  ---                      -----   -----              ------              ------
+    1511707465061000000 FooJob 1511707459.0186539               start  51cc82fe75fbeba37b1ff18f default                    6.042410135269165
+    1511707465061000000 FooJob 1511707459.0186539               finish 51cc82fe75fbeba37b1ff18f default 8.046684265136719  6.042410135269165   2.0042741298675537
+    1511707467068000000 BarJob 1511707461.019835                start  3891f241ab84d3aba728822e default                    6.049134016036987
+    1511707467068000000 BarJob 1511707461.019835  NoMethodError error  3891f241ab84d3aba728822e default 8.056788206100464  6.049134016036987   2.0076541900634766
+
+Tags (repetitive, indexed data — for filtering and grouping by):
+
+* `time` — Standard InfluxDB timestamp. Precision of the supplied client is respected. Only `s`, `ms`, and `u` precisions are supported.
+* `queue` — Queue name.
+* `class` — Job class name.
+* `event` — What happened to the job at the specified `time`: `start`, `finish`, or `error`.
+* `error` — If `event=error`, this tag contains the exception class name.
+
+Values (unique, non-indexed data — for aggregation):
+
+* `jid` — Unique job ID.
+* `creation_time` — Job creation time.
+
+_The following timings are calculated by this gem (in seconds):_
+
+* `waited` — How long the job waited in the `queue` until Sidekiq got around to starting it.
+* `worked` — How long it took to perform the job from start to finish or to an exception.
+* `total` — How much time passed from job creation to finish. How long it took to do the job, in total.
+
+This schema allows querying various job metrics effectively.
+
+For example, how many reports have been generated in the last day:
+
+```sql
+SELECT COUNT(jid) FROM sidekiq_jobs WHERE class = 'ReportGeneration' AND time > now() - 1d
+```
+
+How many different jobs were executed with errors in the last day:
+
+```sql
+SELECT class, count(jid) AS n FROM sidekiq_jobs WHERE time > now() - 1d AND event = 'error' GROUP BY class
+```
+
+Et cetera.
 
 ## Development
 
@@ -32,8 +89,8 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/sidekiq-influxdb. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/vassilevsky/sidekiq-influxdb. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## Code of Conduct
 
-Everyone interacting in the Sidekiq::Influxdb project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/sidekiq-influxdb/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the Sidekiq::InfluxDB project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/vassilevsky/sidekiq-influxdb/blob/master/CODE_OF_CONDUCT.md).

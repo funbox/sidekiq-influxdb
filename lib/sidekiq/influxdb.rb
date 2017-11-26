@@ -1,7 +1,2 @@
 require "sidekiq/influxdb/version"
-
-module Sidekiq
-  module InfluxDB
-    # Your code goes here...
-  end
-end
+require "sidekiq/influxdb/server_middleware"
