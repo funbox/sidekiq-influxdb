@@ -5,7 +5,7 @@ require "sidekiq/influxdb/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "sidekiq-influxdb"
-  spec.version       = Sidekiq::Influxdb::VERSION
+  spec.version       = Sidekiq::InfluxDB::VERSION
   spec.authors       = ["Ilya Vassilevsky"]
   spec.email         = ["vassilevsky@gmail.com"]
 

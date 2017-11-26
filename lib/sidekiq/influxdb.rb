@@ -1,7 +1,7 @@
 require "sidekiq/influxdb/version"
 
 module Sidekiq
-  module Influxdb
+  module InfluxDB
     # Your code goes here...
   end
 end
