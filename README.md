@@ -76,7 +76,7 @@ SELECT COUNT(jid) FROM sidekiq_jobs WHERE class = 'ReportGeneration' AND time > 
 How many different jobs were executed with errors in the last day:
 
 ```sql
-SELECT class, count(jid) AS n FROM sidekiq_jobs WHERE time > now() - 1d AND event = 'error' GROUP BY class
+SELECT COUNT(jid) FROM sidekiq_jobs WHERE event = 'error' AND time > now() - 1d GROUP BY class
 ```
 
 Et cetera.
