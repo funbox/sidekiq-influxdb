@@ -18,8 +18,8 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_runtime_dependency "influxdb", "~> 0.0"
-  spec.add_runtime_dependency "sidekiq", "~> 5.0"
+  spec.add_runtime_dependency "influxdb"
+  spec.add_runtime_dependency "sidekiq"
 
   spec.add_development_dependency "bundler", "~> 1.16"
   spec.add_development_dependency "rake", "~> 10.0"
