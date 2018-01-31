@@ -60,7 +60,7 @@ Values (unique, non-indexed data — for aggregation):
 * `jid` — Unique job ID.
 * `creation_time` — Job creation time.
 
-_The following timings are calculated by this gem (in seconds):_
+Values calculated by this gem (in seconds):
 
 * `waited` — How long the job waited in the `queue` until Sidekiq got around to starting it.
 * `worked` — How long it took to perform the job from start to finish or to an exception.
