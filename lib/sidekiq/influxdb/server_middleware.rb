@@ -6,11 +6,13 @@ module Sidekiq
       def initialize(
         influxdb_client:,
         series_name: 'sidekiq_jobs',
-        retention_policy: nil
+        retention_policy: nil,
+        start_events: true
       )
         @influxdb = influxdb_client
         @series = series_name
         @retention = retention_policy
+        @start_events = start_events
       end
 
       def call(worker, msg, queue)
@@ -28,7 +30,7 @@ module Sidekiq
           },
           timestamp: in_correct_precision(t)
         }
-        save(data)
+        save(data) if @start_events
         begin
           yield
           data[:tags][:event] = 'finish'

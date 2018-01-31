@@ -30,7 +30,8 @@ Sidekiq.configure_server do |config|
     chain.add Sidekiq::InfluxDB::ServerMiddleware,
                 influxdb_client: InfluxDB::Client.new(options), # REQUIRED
                 series_name: 'sidekiq_jobs',                    # optional, default shown
-                retention_policy: nil                           # optional, default nil
+                retention_policy: nil,                          # optional, default nil
+                start_events: true                              # optional, default true
   end
 end
 ```
@@ -51,7 +52,7 @@ Tags (repetitive, indexed data — for filtering and grouping by):
 * `time` — Standard InfluxDB timestamp. Precision of the supplied client is respected. Only `s`, `ms`, and `u` precisions are supported.
 * `queue` — Queue name.
 * `class` — Job class name.
-* `event` — What happened to the job at the specified `time`: `start`, `finish`, or `error`.
+* `event` — What happened to the job at the specified `time`: `start`, `finish`, or `error`. If you initialize the middleware with `start_events: false`, there will be no `start` events. 
 * `error` — If `event=error`, this tag contains the exception class name.
 
 Values (unique, non-indexed data — for aggregation):
