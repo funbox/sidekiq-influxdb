@@ -94,3 +94,5 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/vassil
 ## Code of Conduct
 
 Everyone interacting in the Sidekiq::InfluxDB project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/vassilevsky/sidekiq-influxdb/blob/master/CODE_OF_CONDUCT.md).
+
+[![Sponsored by FunBox](https://funbox.ru/badges/sponsored_by_funbox.svg)](https://funbox.ru)
