@@ -7,12 +7,14 @@ module Sidekiq
         influxdb_client:,
         series_name: 'sidekiq_jobs',
         retention_policy: nil,
-        start_events: true
+        start_events: true,
+        tags: {}
       )
         @influxdb = influxdb_client
         @series = series_name
         @retention = retention_policy
         @start_events = start_events
+        @tags = tags
       end
 
       def call(worker, msg, queue)
@@ -22,7 +24,7 @@ module Sidekiq
             class: worker.class.name,
             queue: queue,
             event: 'start',
-          },
+          }.merge(@tags),
           values: {
             jid:           msg['jid'],
             creation_time: msg['created_at'],

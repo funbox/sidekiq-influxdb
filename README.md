@@ -31,7 +31,8 @@ Sidekiq.configure_server do |config|
                 influxdb_client: InfluxDB::Client.new(options), # REQUIRED
                 series_name: 'sidekiq_jobs',                    # optional, default shown
                 retention_policy: nil,                          # optional, default nil
-                start_events: true                              # optional, default true
+                start_events: true,                             # optional, default true
+                tags: { application: 'MyApp' }                  # optional, default {}
   end
 end
 ```
@@ -40,12 +41,12 @@ When you deploy this code, you will start getting the following series in your I
 
     > select * from sidekiq_jobs
     name: sidekiq_jobs
-    time                class  creation_time      error         event  jid                      queue   total              waited              worked
-    ----                -----  -------------      -----         -----  ---                      -----   -----              ------              ------
-    1511707465061000000 FooJob 1511707459.0186539               start  51cc82fe75fbeba37b1ff18f default                    6.042410135269165
-    1511707465061000000 FooJob 1511707459.0186539               finish 51cc82fe75fbeba37b1ff18f default 8.046684265136719  6.042410135269165   2.0042741298675537
-    1511707467068000000 BarJob 1511707461.019835                start  3891f241ab84d3aba728822e default                    6.049134016036987
-    1511707467068000000 BarJob 1511707461.019835  NoMethodError error  3891f241ab84d3aba728822e default 8.056788206100464  6.049134016036987   2.0076541900634766
+    time                application  class  creation_time      error         event  jid                      queue   total              waited              worked
+    ----                -----------  -----  -------------      -----         -----  ---                      -----   -----              ------              ------
+    1511707465061000000 MyApp        FooJob 1511707459.0186539               start  51cc82fe75fbeba37b1ff18f default                    6.042410135269165
+    1511707465061000000 MyApp        FooJob 1511707459.0186539               finish 51cc82fe75fbeba37b1ff18f default 8.046684265136719  6.042410135269165   2.0042741298675537
+    1511707467068000000 MyApp        BarJob 1511707461.019835                start  3891f241ab84d3aba728822e default                    6.049134016036987
+    1511707467068000000 MyApp        BarJob 1511707461.019835  NoMethodError error  3891f241ab84d3aba728822e default 8.056788206100464  6.049134016036987   2.0076541900634766
 
 Tags (repetitive, indexed data — for filtering and grouping by):
 
