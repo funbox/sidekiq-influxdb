@@ -53,8 +53,9 @@ Tags (repetitive, indexed data — for filtering and grouping by):
 * `time` — Standard InfluxDB timestamp. Precision of the supplied client is respected. Only `s`, `ms`, and `u` precisions are supported.
 * `queue` — Queue name.
 * `class` — Job class name.
-* `event` — What happened to the job at the specified `time`: `start`, `finish`, or `error`. If you initialize the middleware with `start_events: false`, there will be no `start` events. 
+* `event` — What happened to the job at the specified `time`: `start`, `finish`, or `error`. If you initialize the middleware with `start_events: false`, there will be no `start` events.
 * `error` — If `event=error`, this tag contains the exception class name.
+* your own tags from the initializer
 
 Values (unique, non-indexed data — for aggregation):
 
