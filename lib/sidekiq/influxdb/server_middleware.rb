@@ -1,3 +1,4 @@
+require 'set'
 require 'influxdb'
 
 module Sidekiq
@@ -8,16 +9,22 @@ module Sidekiq
         series_name: 'sidekiq_jobs',
         retention_policy: nil,
         start_events: true,
-        tags: {}
+        tags: {},
+        except: []
       )
         @influxdb = influxdb_client
         @series = series_name
         @retention = retention_policy
         @start_events = start_events
         @tags = tags
+        @secret_agents = Set.new(except)
       end
 
       def call(worker, msg, queue)
+        if @secret_agents.include?(worker.class)
+          yield
+          return
+        end
         t = Time.now.to_f
         data = {
           tags: {

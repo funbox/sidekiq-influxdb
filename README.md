@@ -32,7 +32,8 @@ Sidekiq.configure_server do |config|
                 series_name: 'sidekiq_jobs',                    # optional, default shown
                 retention_policy: nil,                          # optional, default nil
                 start_events: true,                             # optional, default true
-                tags: { application: 'MyApp' }                  # optional, default {}
+                tags: { application: 'MyApp' },                 # optional, default {}
+                except: [UnimportantJob1, UnimportantJob2]      # optional, default []
   end
 end
 ```
@@ -52,7 +53,7 @@ Tags (repetitive, indexed data — for filtering and grouping by):
 
 * `time` — Standard InfluxDB timestamp. Precision of the supplied client is respected. Only `s`, `ms`, and `u` precisions are supported.
 * `queue` — Queue name.
-* `class` — Job class name.
+* `class` — Job class name. Classes from `except:` keyword argument are skipped (no data is sent to InfluxDB).
 * `event` — What happened to the job at the specified `time`: `start`, `finish`, or `error`. If you initialize the middleware with `start_events: false`, there will be no `start` events.
 * `error` — If `event=error`, this tag contains the exception class name.
 * your own tags from the initializer
