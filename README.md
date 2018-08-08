@@ -27,7 +27,7 @@ require "sidekiq/influxdb/server_middleware"
 
 Sidekiq.configure_server do |config|
   config.server_middleware do |chain|
-    chain.add Sidekiq::InfluxDB::ServerMiddleware,
+    chain.add Sidekiq::Middleware::Server::InfluxDB,
                 influxdb_client: InfluxDB::Client.new(options), # REQUIRED
                 series_name: 'sidekiq_jobs',                    # optional, default shown
                 retention_policy: nil,                          # optional, default nil

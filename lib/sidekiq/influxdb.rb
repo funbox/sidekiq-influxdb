@@ -1,2 +1,2 @@
 require "sidekiq/influxdb/version"
-require "sidekiq/influxdb/server_middleware"
+require "sidekiq/middleware/server/influxdb"

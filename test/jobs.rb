@@ -1,4 +1,4 @@
-require "sidekiq/influxdb/server_middleware"
+require "sidekiq/middleware/server/influxdb"
 
 module LooksLikeWork
   def perform
@@ -24,7 +24,7 @@ end
 
 Sidekiq.configure_server do |config|
   config.server_middleware do |chain|
-    chain.add Sidekiq::InfluxDB::ServerMiddleware,
+    chain.add Sidekiq::Middleware::Server::InfluxDB,
               influxdb_client: InfluxDB::Client.new('test', time_precision: 'ms'),
               except: [IgnoredJob]
   end
