@@ -30,7 +30,7 @@ module Sidekiq
           t = Time.now.to_f
           data = {
             tags: {
-              class: worker.class.name,
+              class: msg['wrapped'] || msg['class'],
               queue: queue,
               event: 'start',
             }.merge(@tags),
