@@ -30,7 +30,7 @@ module Sidekiq
           t = Time.now.to_f
           data = {
             tags: {
-              class: worker.class.name,
+              class: class_name(worker, msg),
               queue: queue,
               event: 'start',
             }.merge(@tags),
@@ -61,6 +61,12 @@ module Sidekiq
 
         def save(data)
           @influxdb.write_point(@series, data, precision, @retention)
+        end
+
+        def class_name(worker, job)
+          name = worker.class.name
+          return name unless name == 'ActiveJob::QueueAdapters::SidekiqAdapter::JobWrapper'
+          job['args'].first['job_class']
         end
 
         def precision
