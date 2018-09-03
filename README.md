@@ -23,7 +23,7 @@ Add included middleware to your application's Sidekiq middleware stack:
 ```ruby
 # config/initializers/sidekiq.rb
 
-require "sidekiq/influxdb/server_middleware"
+require "sidekiq/middleware/server/influxdb"
 
 Sidekiq.configure_server do |config|
   config.server_middleware do |chain|
