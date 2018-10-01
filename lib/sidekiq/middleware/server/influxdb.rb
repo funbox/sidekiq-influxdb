@@ -27,7 +27,7 @@ module Sidekiq
             yield
             return
           end
-          t = Time.now.to_f
+          t = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           data = {
             tags: {
               class: msg['wrapped'] || msg['class'],
@@ -49,7 +49,7 @@ module Sidekiq
             data[:tags][:event] = 'error'
             data[:tags][:error] = e.class.name
           end
-          tt = Time.now.to_f
+          tt = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           data[:values][:worked] = tt - t
           data[:values][:total]  = tt - msg['created_at']
           data[:timestamp] = in_correct_precision(tt)
