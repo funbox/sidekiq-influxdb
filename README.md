@@ -10,14 +10,6 @@ Add this gem to your application's `Gemfile`:
 
 ## Usage
 
-Sidekiq middleware description:
-
-https://github.com/mperham/sidekiq/wiki/Middleware
-
-InfluxDB client description:
-
-https://github.com/influxdata/influxdb-ruby/blob/master/README.md
-
 Add included middleware to your application's Sidekiq middleware stack:
 
 ```ruby
@@ -86,6 +78,9 @@ SELECT COUNT(jid) FROM sidekiq_jobs WHERE event = 'error' AND time > now() - 1d 
 Et cetera.
 
 ## Development
+
+* [Sidekiq middleware](https://github.com/mperham/sidekiq/wiki/Middleware)
+* [InfluxDB client](https://github.com/influxdata/influxdb-ruby)
 
 After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
