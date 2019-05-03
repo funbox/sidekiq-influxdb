@@ -30,6 +30,12 @@ Sidekiq.configure_server do |config|
 end
 ```
 
+**Warning:** This middleware is going to write _a lot_ of metrics.
+Set up your InfluxDB client accordingly:
+* either set `async: true` in the client's options to use its built-in batching feature
+* or install Telegraf, set up aggregation inside it, and set up InfluxDB client to send metrics to it
+* or both
+
 When you deploy this code, you will start getting the following series in your InfluxDB database:
 
     > select * from sidekiq_jobs
