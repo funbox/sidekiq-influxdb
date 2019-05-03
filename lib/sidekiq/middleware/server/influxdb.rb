@@ -70,9 +70,12 @@ module Sidekiq
         def in_correct_precision(t)
           case precision
             # In order of probability in real-world setups
-            when 'ms' then (t * 1000).to_i
+            when 'ms' then (t * 1_000).to_i
             when 's'  then  t.to_i
-            when 'u'  then (t * 1000000).to_i
+            when 'u'  then (t * 1_000_000).to_i
+            when 'ns' then (t * 1_000_000_000).to_i
+            when 'm'  then (t / 60).to_i
+            when 'h'  then (t / 60 / 60).to_i
           end
         end
 

@@ -43,7 +43,7 @@ When you deploy this code, you will start getting the following series in your I
 
 Tags (repetitive, indexed data — for filtering and grouping by):
 
-* `time` — Standard InfluxDB timestamp. Precision of the supplied client is respected. Only `s`, `ms`, and `u` precisions are supported.
+* `time` — Standard InfluxDB timestamp. Precision of the supplied client is respected.
 * `queue` — Queue name.
 * `class` — Job class name. Classes from `except:` keyword argument are skipped (no data is sent to InfluxDB).
 * `event` — What happened to the job at the specified `time`: `start`, `finish`, or `error`. If you initialize the middleware with `start_events: false`, there will be no `start` events.
