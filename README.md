@@ -30,6 +30,8 @@ Sidekiq.configure_server do |config|
 end
 ```
 
+You can learn how to create a client in [InfluxDB client documentation](https://github.com/influxdata/influxdb-ruby#creating-a-client).
+
 **Warning:** This middleware is going to write _a lot_ of metrics.
 Set up your InfluxDB client accordingly:
 * either set `async: true` in the client's options to use its built-in batching feature
