@@ -29,6 +29,16 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
       .call(nil, {'jid' => 'abc123', 'class' => 'Worker', 'created_at' => t}, 'queue') { job.perform }
   end
 
+  it 'writes to user-defined series' do
+    expect(influxdb_client).to receive(:write_point) do |series, _d, _p, _r|
+      expect(series).to eq('jobz')
+    end.exactly(2).times
+
+    described_class
+      .new(influxdb_client: influxdb_client, series_name: 'jobz')
+      .call(nil, {'created_at' => t}, nil) { job.perform }
+  end
+
   describe 'does not write metrics of ignored job classes' do
     it 'lets through a single class' do
       class Worker; end
