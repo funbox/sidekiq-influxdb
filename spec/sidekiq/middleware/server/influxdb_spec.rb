@@ -26,7 +26,7 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
 
     described_class
       .new(influxdb_client: influxdb_client, clock: clock)
-      .call(nil, {'jid' => 'abc123', 'wrapped' => 'Worker', 'created_at' => t}, 'queue') { job.perform }
+      .call(nil, {'jid' => 'abc123', 'class' => 'Worker', 'created_at' => t}, 'queue') { job.perform }
   end
 
   describe 'does not write metrics of ignored job classes' do
@@ -35,7 +35,7 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
 
       described_class
         .new(influxdb_client: influxdb_client, except: Worker)
-        .call(nil, {'wrapped' => 'Worker'}, nil) { job.perform }
+        .call(nil, {'class' => 'Worker'}, nil) { job.perform }
     end
 
     it 'lets through multiple classes' do
@@ -43,20 +43,30 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
       class Bar; end
 
       middleware = described_class.new(influxdb_client: influxdb_client, except: [Foo, Bar, Foo])
-      middleware.call(nil, {'wrapped' => 'Foo'}, nil) { job.perform }
-      middleware.call(nil, {'wrapped' => 'Bar'}, nil) { job.perform }
+      middleware.call(nil, {'class' => 'Foo'}, nil) { job.perform }
+      middleware.call(nil, {'class' => 'Bar'}, nil) { job.perform }
     end
 
     it 'lets through a single class name' do
       described_class
         .new(influxdb_client: influxdb_client, except: 'Worker')
-        .call(nil, {'wrapped' => 'Worker'}, nil) { job.perform }
+        .call(nil, {'class' => 'Worker'}, nil) { job.perform }
     end
 
     it 'lets through multiple class names' do
       middleware = described_class.new(influxdb_client: influxdb_client, except: ['Foo', 'Bar', 'Foo'])
-      middleware.call(nil, {'wrapped' => 'Foo'}, nil) { job.perform }
-      middleware.call(nil, {'wrapped' => 'Bar'}, nil) { job.perform }
+      middleware.call(nil, {'class' => 'Foo'}, nil) { job.perform }
+      middleware.call(nil, {'class' => 'Bar'}, nil) { job.perform }
     end
+  end
+
+  it 'writes original job name even if it comes through ActiveJob' do
+    expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
+      expect(data[:tags][:class]).to eq('Worker')
+    end.exactly(2).times
+
+    described_class
+      .new(influxdb_client: influxdb_client)
+      .call(nil, {'class' => 'ActiveJob', 'wrapped' => 'Worker', 'created_at' => t}, nil) { job.perform }
   end
 end
