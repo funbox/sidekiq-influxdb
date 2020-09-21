@@ -20,12 +20,12 @@ module Sidekiq
           @retention = retention_policy
           @start_events = start_events
           @tags = tags
-          @secret_agents = Set.new(except)
+          @secret_agents = class_names(except)
           @clock = clock
         end
 
-        def call(worker, msg, queue)
-          if @secret_agents.include?(worker.class)
+        def call(_worker, msg, queue)
+          if @secret_agents.include?(job_class_name(msg))
             yield
             return
           end
@@ -34,7 +34,7 @@ module Sidekiq
 
           data = {
             tags: {
-              class: msg['wrapped'] || msg['class'],
+              class: job_class_name(msg),
               queue: queue,
               event: 'start',
             }.merge(@tags),
@@ -68,6 +68,20 @@ module Sidekiq
         end
 
         private
+
+        def class_names(except)
+          Set.new([except].flatten.map{|e| class_name(e) })
+        end
+
+        def class_name(class_or_name)
+          class_or_name.name
+        rescue NoMethodError
+          class_or_name
+        end
+
+        def job_class_name(msg)
+          msg['wrapped'] || msg['class']
+        end
 
         def save(data)
           @influxdb.write_point(@series, data, precision, @retention)

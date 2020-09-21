@@ -21,6 +21,37 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
 
     described_class
       .new(influxdb_client: influxdb_client, clock: clock)
-      .call(Class, {'jid' => 'abc123', 'wrapped' => 'Worker', 'created_at' => t}, 'queue') { nil }
+      .call(nil, {'jid' => 'abc123', 'wrapped' => 'Worker', 'created_at' => t}, 'queue') { nil }
+  end
+
+  describe 'does not write metrics of ignored job classes' do
+    it 'lets through a single class' do
+      class Worker; end
+
+      described_class
+        .new(influxdb_client: influxdb_client, except: Worker)
+        .call(nil, {'wrapped' => 'Worker'}, nil) { nil }
+    end
+
+    it 'lets through multiple classes' do
+      class Foo; end
+      class Bar; end
+
+      middleware = described_class.new(influxdb_client: influxdb_client, except: [Foo, Bar, Foo])
+      middleware.call(nil, {'wrapped' => 'Foo'}, nil) { nil }
+      middleware.call(nil, {'wrapped' => 'Bar'}, nil) { nil }
+    end
+
+    it 'lets through a single class name' do
+      described_class
+        .new(influxdb_client: influxdb_client, except: 'Worker')
+        .call(nil, {'wrapped' => 'Worker'}, nil) { nil }
+    end
+
+    it 'lets through multiple class names' do
+      middleware = described_class.new(influxdb_client: influxdb_client, except: ['Foo', 'Bar', 'Foo'])
+      middleware.call(nil, {'wrapped' => 'Foo'}, nil) { nil }
+      middleware.call(nil, {'wrapped' => 'Bar'}, nil) { nil }
+    end
   end
 end
