@@ -20,4 +20,6 @@ Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency "influxdb"
   spec.add_runtime_dependency "sidekiq"
+
+  spec.add_development_dependency "rspec"
 end
