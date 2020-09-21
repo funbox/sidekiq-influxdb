@@ -12,7 +12,8 @@ module Sidekiq
           retention_policy: nil,
           start_events: true,
           tags: {},
-          except: []
+          except: [],
+          clock: -> { Time.now.to_f }
         )
           @influxdb = influxdb_client
           @series = series_name
@@ -20,6 +21,7 @@ module Sidekiq
           @start_events = start_events
           @tags = tags
           @secret_agents = Set.new(except)
+          @clock = clock
         end
 
         def call(worker, msg, queue)
@@ -28,7 +30,7 @@ module Sidekiq
             return
           end
 
-          t = Time.now.to_f
+          t = @clock.call
 
           data = {
             tags: {
@@ -54,7 +56,7 @@ module Sidekiq
             data[:tags][:error] = e.class.name
           end
 
-          tt = Time.now.to_f
+          tt = @clock.call
 
           data[:values][:worked] = tt - t
           data[:values][:total]  = tt - msg['created_at']
