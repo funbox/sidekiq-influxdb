@@ -89,4 +89,23 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
       .new(influxdb_client: influxdb_client, start_events: false)
       .call(nil, {'created_at' => t}, nil) { job.perform }
   end
+
+  it 'writes an error event if there was an error' do
+    allow(job).to receive(:perform).and_raise(Errno::ECONNREFUSED)
+
+    expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
+      expect(data[:tags][:event]).to eq('start')
+    end.once
+
+    expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
+      expect(data[:tags][:event]).to eq('error')
+      expect(data[:tags][:error]).to eq('Errno::ECONNREFUSED')
+    end.once
+
+    expect do
+      described_class
+        .new(influxdb_client: influxdb_client)
+        .call(nil, {'created_at' => t}, nil) { job.perform }
+    end.to raise_error(Errno::ECONNREFUSED)
+  end
 end
