@@ -27,7 +27,9 @@ module Sidekiq
             yield
             return
           end
+
           t = Time.now.to_f
+
           data = {
             tags: {
               class: msg['wrapped'] || msg['class'],
@@ -41,7 +43,9 @@ module Sidekiq
             },
             timestamp: in_correct_precision(t)
           }
+
           save(data) if @start_events
+
           begin
             yield
             data[:tags][:event] = 'finish'
@@ -49,11 +53,15 @@ module Sidekiq
             data[:tags][:event] = 'error'
             data[:tags][:error] = e.class.name
           end
+
           tt = Time.now.to_f
+
           data[:values][:worked] = tt - t
           data[:values][:total]  = tt - msg['created_at']
           data[:timestamp] = in_correct_precision(tt)
+
           save(data)
+
           raise e if e
         end
 
