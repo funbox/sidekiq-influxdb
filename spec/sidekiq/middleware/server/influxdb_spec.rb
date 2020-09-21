@@ -79,4 +79,14 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
       .new(influxdb_client: influxdb_client, tags: {foo: 'bar'})
       .call(nil, {'created_at' => t}, nil) { job.perform }
   end
+
+  it 'does not send job start events if user wants so' do
+    expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
+      expect(data[:tags][:event]).to eq('finish')
+    end.once
+
+    described_class
+      .new(influxdb_client: influxdb_client, start_events: false)
+      .call(nil, {'created_at' => t}, nil) { job.perform }
+  end
 end
