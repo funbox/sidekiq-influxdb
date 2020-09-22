@@ -41,6 +41,22 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
       .call(nil, {'created_at' => t}, nil) { job.perform }
   end
 
+  context 'when a different precision is configured in the supplied client' do
+    let(:config) { instance_double(InfluxDB::Config, time_precision: 'ns') }
+
+    it 'writes timestamps with configured precision' do
+      allow(clock).to receive(:call).and_return(1600781222.995706880)
+
+      expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
+        expect(data[:timestamp]).to eq(1600781222995706880)
+      end.once
+
+      described_class
+        .new(influxdb_client: influxdb_client, start_events: false, clock: clock)
+        .call(nil, {'created_at' => t}, nil) { job.perform }
+    end
+  end
+
   it 'writes to user-defined retention policy' do
     expect(influxdb_client).to receive(:write_point) do |_s, _d, _p, retention_policy|
       expect(retention_policy).to eq('foo')
