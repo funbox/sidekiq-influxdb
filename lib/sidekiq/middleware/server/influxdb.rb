@@ -30,7 +30,8 @@ module Sidekiq
           end
 
           t = @clock.call
-          record(t, msg, {event: 'start'}, {waited: t - msg['created_at']}) if @start_events
+          waited = t - msg['created_at']
+          record(t, msg, {event: 'start'}, {waited: waited}) if @start_events
 
           begin
             yield
@@ -40,7 +41,8 @@ module Sidekiq
           end
 
           tt = @clock.call
-          record(tt, msg, tags, {waited: t - msg['created_at'], worked: tt - t, total: tt - msg['created_at']})
+          worked = tt - t
+          record(tt, msg, tags, {waited: waited, worked: worked, total: waited + worked})
 
           raise e if e
         end
