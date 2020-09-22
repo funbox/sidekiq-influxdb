@@ -34,10 +34,10 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
   it 'writes to user-defined series' do
     expect(influxdb_client).to receive(:write_point) do |series, _d, _p, _r|
       expect(series).to eq('jobz')
-    end.exactly(2).times
+    end.once
 
     described_class
-      .new(influxdb_client: influxdb_client, series_name: 'jobz')
+      .new(influxdb_client: influxdb_client, start_events: false, series_name: 'jobz')
       .call(nil, {'created_at' => t}, nil) { job.perform }
   end
 
@@ -68,10 +68,10 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
   it 'writes to user-defined retention policy' do
     expect(influxdb_client).to receive(:write_point) do |_s, _d, _p, retention_policy|
       expect(retention_policy).to eq('foo')
-    end.exactly(2).times
+    end.once
 
     described_class
-      .new(influxdb_client: influxdb_client, retention_policy: 'foo')
+      .new(influxdb_client: influxdb_client, start_events: false, retention_policy: 'foo')
       .call(nil, {'created_at' => t}, nil) { job.perform }
   end
 
@@ -88,10 +88,10 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
   it 'mixes in user-specified tags' do
     expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
       expect(data[:tags][:foo]).to eq('bar')
-    end.exactly(2).times
+    end.once
 
     described_class
-      .new(influxdb_client: influxdb_client, tags: {foo: 'bar'})
+      .new(influxdb_client: influxdb_client, start_events: false, tags: {foo: 'bar'})
       .call(nil, {'created_at' => t}, nil) { job.perform }
   end
 
@@ -129,10 +129,10 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
   it 'writes original job name even if it comes through ActiveJob' do
     expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
       expect(data[:tags][:class]).to eq('Worker')
-    end.exactly(2).times
+    end.once
 
     described_class
-      .new(influxdb_client: influxdb_client)
+      .new(influxdb_client: influxdb_client, start_events: false)
       .call(nil, {'class' => 'ActiveJob', 'wrapped' => 'Worker', 'created_at' => t}, nil) { job.perform }
   end
 
