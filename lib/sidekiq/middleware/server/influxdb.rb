@@ -23,45 +23,24 @@ module Sidekiq
           @clock = clock
         end
 
-        def call(_worker, msg, queue)
+        def call(_worker, msg, _queue)
           if @secret_agents.include?(job_class_name(msg))
             yield
             return
           end
 
           t = @clock.call
-
-          data = {
-            tags: {
-              class: job_class_name(msg),
-              queue: queue,
-              event: 'start',
-            }.merge(@tags),
-            values: {
-              jid:           msg['jid'],
-              creation_time: msg['created_at'],
-              waited:    t - msg['created_at'],
-            },
-            timestamp: in_correct_precision(t)
-          }
-
-          save(data) if @start_events
+          record(t, msg, {event: 'start'}, {waited: t - msg['created_at']}) if @start_events
 
           begin
             yield
-            data[:tags][:event] = 'finish'
+            tags = {event: 'finish'}
           rescue => e
-            data[:tags][:event] = 'error'
-            data[:tags][:error] = e.class.name
+            tags = {event: 'error', error: e.class.name}
           end
 
           tt = @clock.call
-
-          data[:values][:worked] = tt - t
-          data[:values][:total]  = tt - msg['created_at']
-          data[:timestamp] = in_correct_precision(tt)
-
-          save(data)
+          record(tt, msg, tags, {waited: t - msg['created_at'], worked: tt - t, total: tt - msg['created_at']})
 
           raise e if e
         end
@@ -80,6 +59,20 @@ module Sidekiq
 
         def job_class_name(msg)
           msg['wrapped'] || msg['class']
+        end
+
+        def record(t, msg, tags, values = {})
+          save(
+            tags: {
+              class: job_class_name(msg),
+              queue: msg['queue']
+            }.merge(tags).merge(@tags),
+            values: {
+              jid: msg['jid'],
+              creation_time: msg['created_at']
+            }.merge(values),
+            timestamp: in_correct_precision(t)
+          )
         end
 
         def save(data)

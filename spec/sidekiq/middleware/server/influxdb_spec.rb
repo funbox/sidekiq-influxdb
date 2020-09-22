@@ -13,13 +13,13 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
 
   it 'writes metrix to InfluxDB client' do
     expect(influxdb_client).to receive(:write_point).with("sidekiq_jobs", {
-      tags: {queue: 'queue', class: 'Worker', event: 'start'},
+      tags: {queue: 'foo', class: 'Worker', event: 'start'},
       values: {jid: 'abc123', creation_time: t, waited: 1.0},
       timestamp: t.to_i + 1
     }, 's', nil).once
 
     expect(influxdb_client).to receive(:write_point).with("sidekiq_jobs", {
-      tags: {queue: 'queue', class: 'Worker', event: 'finish'},
+      tags: {queue: 'foo', class: 'Worker', event: 'finish'},
       values: {jid: 'abc123', creation_time: t, waited: 1.0, worked: 2.0, total: 3.0},
       timestamp: t.to_i + 3
     }, 's', nil).once
@@ -28,7 +28,7 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
 
     described_class
       .new(influxdb_client: influxdb_client, clock: clock)
-      .call(nil, {'jid' => 'abc123', 'class' => 'Worker', 'created_at' => t}, 'queue') { job.perform }
+      .call(nil, {'jid' => 'abc123', 'queue' => 'foo', 'class' => 'Worker', 'created_at' => t}, nil) { job.perform }
   end
 
   it 'writes to user-defined series' do
