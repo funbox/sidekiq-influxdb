@@ -97,8 +97,8 @@ module Sidekiq
             when 's'  then  t.to_i
             when 'u'  then (t * 1_000_000).to_i
             when 'ns' then (t * 1_000_000_000).to_i
-            when 'm'  then (t / 60).to_i
-            when 'h'  then (t / 60 / 60).to_i
+            when 'm'  then (t / 60).to_i * 60
+            when 'h'  then (t / 60 / 60).to_i * 60 * 60
           end
         end
 
