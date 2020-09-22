@@ -1,5 +1,4 @@
 require 'set'
-require 'influxdb'
 
 module Sidekiq
   module Middleware

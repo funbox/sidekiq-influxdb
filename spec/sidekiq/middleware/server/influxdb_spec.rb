@@ -1,3 +1,5 @@
+require 'influxdb'
+
 RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
   let(:influxdb_client) { instance_double(InfluxDB::Client, config: config) }
   let(:config) { instance_double(InfluxDB::Config, time_precision: 's') }
