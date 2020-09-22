@@ -41,19 +41,27 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
       .call(nil, {'created_at' => t}, nil) { job.perform }
   end
 
-  context 'when a different precision is configured in the supplied client' do
-    let(:config) { instance_double(InfluxDB::Config, time_precision: 'ns') }
+  {
+     h: 1234566000,
+     m: 1234567860,
+     s: 1234567890,
+    ms: 1234567890123,
+     u: 1234567890123456,
+    ns: 1234567890123456768, # seems to be floating point issue
+  }
+  .each do |precision, timestamp|
+    context "when the supplied client is configured to use the precision '#{precision}'" do
+      let(:config) { instance_double(InfluxDB::Config, time_precision: precision.to_s) }
 
-    it 'writes timestamps with configured precision' do
-      allow(clock).to receive(:call).and_return(1600781222.995706880)
+      it "writes timestamp as #{timestamp}" do
+        expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
+          expect(data[:timestamp]).to eq(timestamp)
+        end.once
 
-      expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
-        expect(data[:timestamp]).to eq(1600781222995706880)
-      end.once
-
-      described_class
-        .new(influxdb_client: influxdb_client, start_events: false, clock: clock)
-        .call(nil, {'created_at' => t}, nil) { job.perform }
+        described_class
+          .new(influxdb_client: influxdb_client, start_events: false, clock: -> { 1234567890.123456789 })
+          .call(nil, {'created_at' => t}, nil) { job.perform }
+      end
     end
   end
 
