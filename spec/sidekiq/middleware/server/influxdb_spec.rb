@@ -41,6 +41,16 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
       .call(nil, {'created_at' => t}, nil) { job.perform }
   end
 
+  it 'writes to user-defined retention policy' do
+    expect(influxdb_client).to receive(:write_point) do |_s, _d, _p, retention_policy|
+      expect(retention_policy).to eq('foo')
+    end.exactly(2).times
+
+    described_class
+      .new(influxdb_client: influxdb_client, retention_policy: 'foo')
+      .call(nil, {'created_at' => t}, nil) { job.perform }
+  end
+
   describe 'does not write metrics of ignored job classes' do
     it 'lets through a single class' do
       class Worker; end
