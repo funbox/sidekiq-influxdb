@@ -51,6 +51,26 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
       .call(nil, {'created_at' => t}, nil) { job.perform }
   end
 
+  it 'does not send job start events if user wants so' do
+    expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
+      expect(data[:tags][:event]).to eq('finish')
+    end.once
+
+    described_class
+      .new(influxdb_client: influxdb_client, start_events: false)
+      .call(nil, {'created_at' => t}, nil) { job.perform }
+  end
+
+  it 'mixes in user-specified tags' do
+    expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
+      expect(data[:tags][:foo]).to eq('bar')
+    end.exactly(2).times
+
+    described_class
+      .new(influxdb_client: influxdb_client, tags: {foo: 'bar'})
+      .call(nil, {'created_at' => t}, nil) { job.perform }
+  end
+
   describe 'does not write metrics of ignored job classes' do
     it 'lets through a single class' do
       class Worker; end
@@ -90,26 +110,6 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
     described_class
       .new(influxdb_client: influxdb_client)
       .call(nil, {'class' => 'ActiveJob', 'wrapped' => 'Worker', 'created_at' => t}, nil) { job.perform }
-  end
-
-  it 'mixes in user-specified tags' do
-    expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
-      expect(data[:tags][:foo]).to eq('bar')
-    end.exactly(2).times
-
-    described_class
-      .new(influxdb_client: influxdb_client, tags: {foo: 'bar'})
-      .call(nil, {'created_at' => t}, nil) { job.perform }
-  end
-
-  it 'does not send job start events if user wants so' do
-    expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
-      expect(data[:tags][:event]).to eq('finish')
-    end.once
-
-    described_class
-      .new(influxdb_client: influxdb_client, start_events: false)
-      .call(nil, {'created_at' => t}, nil) { job.perform }
   end
 
   it 'writes an error event if there was an error' do
