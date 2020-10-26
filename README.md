@@ -89,6 +89,10 @@ SELECT COUNT(jid) FROM sidekiq_jobs WHERE event = 'error' AND time > now() - 1d 
 
 Et cetera.
 
+## For Grafana
+
+You can use ready dashboard from [grafana_dashboard.json](grafana_dashboard.json)
+
 ## Development
 
 * [Sidekiq middleware](https://github.com/mperham/sidekiq/wiki/Middleware)
