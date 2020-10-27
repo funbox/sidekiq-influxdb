@@ -1,5 +1,7 @@
 # Sidekiq::InfluxDB
 
+[![Gem Version](https://img.shields.io/gem/v/sidekiq-influxdb.svg)](https://rubygems.org/gems/sidekiq-influxdb)
+
 [Sidekiq](https://github.com/mperham/sidekiq/wiki) middleware that writes job lifecycle events as points to an [InfluxDB](http://docs.influxdata.com/influxdb/v1.3/) database.
 
 ## Installation
