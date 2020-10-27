@@ -2,6 +2,7 @@
 
 [![Gem Version](https://img.shields.io/gem/v/sidekiq-influxdb.svg)](https://rubygems.org/gems/sidekiq-influxdb)
 [![Travis CI](https://img.shields.io/travis/com/funbox/sidekiq-influxdb)](https://travis-ci.com/github/funbox/sidekiq-influxdb)
+[![Coveralls](https://img.shields.io/coveralls/funbox/sidekiq-influxdb.svg)](https://coveralls.io/github/funbox/sidekiq-influxdb)
 
 [Sidekiq](https://github.com/mperham/sidekiq/wiki) middleware that writes job lifecycle events as points to an [InfluxDB](http://docs.influxdata.com/influxdb/v1.3/) database.
 
