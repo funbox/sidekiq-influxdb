@@ -102,7 +102,7 @@ You can import the ready-made dashboard from [grafana_dashboard.json](grafana_da
 * [Sidekiq middleware](https://github.com/mperham/sidekiq/wiki/Middleware)
 * [InfluxDB client](https://github.com/influxdata/influxdb-ruby)
 
-After checking out the repo, run `bin/setup` to install dependencies. 
+After checking out the repo, run `bin/setup` to install dependencies.
 You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 ## Contributing
@@ -112,7 +112,7 @@ This project is intended to be a safe, welcoming space for collaboration, and co
 
 ## Code of Conduct
 
-Everyone interacting in the `Sidekiq::InfluxDB` project’s codebases, issue trackers, 
+Everyone interacting in the `Sidekiq::InfluxDB` project’s codebases, issue trackers,
 chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/funbox/sidekiq-influxdb/blob/master/CODE_OF_CONDUCT.md).
 
 [![Sponsored by FunBox](https://funbox.ru/badges/sponsored_by_funbox_centered.svg)](https://funbox.ru)
