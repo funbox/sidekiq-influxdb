@@ -93,6 +93,66 @@ SELECT COUNT(jid) FROM sidekiq_jobs WHERE event = 'error' AND time > now() - 1d 
 
 Et cetera.
 
+### Stats and Queues metrics
+
+To collect metrics for task stats and queues, you need to run the script periodically. For example you can use gem `clockwork`. You can add settings like this to `clock.rb`
+
+```ruby
+require "sidekiq/metrics/stats"
+require "sidekiq/metrics/queues"
+
+every(1.minute, 'sidekiq_metrics') do
+  Sidekiq::Metrics::Stats.new(influxdb_client: InfluxDB::Client.new(options)).call
+  Sidekiq::Metrics::Queues.new(influxdb_client: InfluxDB::Client.new(options)).call
+end
+```
+
+For stats metrics:
+```ruby
+require "sidekiq/metrics/stats"
+
+Sidekiq::Metrics::Stats.new(
+  influxdb_client: InfluxDB::Client.new(options), # REQUIRED
+  series_name: 'sidekiq_stats',                   # optional, default shown
+  retention_policy: nil,                          # optional, default nil
+  tags: {},                                       # optional, default {}
+).call
+```
+
+For queues metrics:
+```ruby
+require "sidekiq/metrics/queues"
+
+Sidekiq::Metrics::Queues.new(
+  influxdb_client: InfluxDB::Client.new(options), # REQUIRED
+  series_name: 'sidekiq_queues',                  # optional, default shown
+  retention_policy: nil,                          # optional, default nil
+  tags: {},                                       # optional, default {}
+).call
+```
+
+When you run the scripts, you will get the following series in your InfluxDB database:
+
+```
+> select * from sidekiq_stats
+name: sidekiq_stats
+time                size     stat
+----                ----     ----
+1582502419000000000 9999     dead
+1582502419000000000 0        workers
+1582502419000000000 0        enqueued
+1582502419000000000 23020182 processed
+```
+
+```
+> select * from sidekiq_queues
+name: sidekiq_queues
+time                queue             size
+----                -----             ----
+1582502418000000000 default           0
+1582502418000000000 queue_name_1      0
+```
+
 ## Visualization
 
 ### Grafana
