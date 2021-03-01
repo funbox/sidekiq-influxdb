@@ -18,7 +18,7 @@ RSpec.describe Sidekiq::Metrics::Queues do
       values: {size: 1}
     }, 's', nil).once
 
-    described_class.new(influxdb_client: influxdb_client).call
+    described_class.new(influxdb_client: influxdb_client).publish
   end
 
   it 'writes to user-defined series' do
@@ -26,7 +26,7 @@ RSpec.describe Sidekiq::Metrics::Queues do
       expect(series).to eq('some_name')
     end.once
 
-    described_class.new(influxdb_client: influxdb_client, series_name: 'some_name').call
+    described_class.new(influxdb_client: influxdb_client, series_name: 'some_name').publish
   end
 
   it 'writes to user-defined retention policy' do
@@ -34,7 +34,7 @@ RSpec.describe Sidekiq::Metrics::Queues do
       expect(retention_policy).to eq('foo')
     end.once
 
-    described_class.new(influxdb_client: influxdb_client, retention_policy: 'foo').call
+    described_class.new(influxdb_client: influxdb_client, retention_policy: 'foo').publish
   end
 
   it 'mixes in user-specified tags' do
@@ -42,6 +42,6 @@ RSpec.describe Sidekiq::Metrics::Queues do
       expect(data[:tags][:foo]).to eq('bar')
     end.once
 
-    described_class.new(influxdb_client: influxdb_client, tags: {foo: 'bar'}).call
+    described_class.new(influxdb_client: influxdb_client, tags: {foo: 'bar'}).publish
   end
 end

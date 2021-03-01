@@ -16,7 +16,7 @@ module Sidekiq
         @tags = tags
       end
 
-      def call
+      def publish
         queues = Sidekiq::Stats::Queues.new.lengths
 
         queues.each do |queue, size|

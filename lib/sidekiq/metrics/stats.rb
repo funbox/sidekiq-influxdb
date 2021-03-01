@@ -16,7 +16,7 @@ module Sidekiq
         @tags = tags
       end
 
-      def call
+      def publish
         stats = Sidekiq::Stats.new.instance_variable_get(:@stats)
         stats.delete(:default_queue_latency)
 

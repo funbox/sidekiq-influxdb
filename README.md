@@ -102,8 +102,8 @@ require "sidekiq/metrics/stats"
 require "sidekiq/metrics/queues"
 
 every(1.minute, 'sidekiq_metrics') do
-  Sidekiq::Metrics::Stats.new(influxdb_client: InfluxDB::Client.new(options)).call
-  Sidekiq::Metrics::Queues.new(influxdb_client: InfluxDB::Client.new(options)).call
+  Sidekiq::Metrics::Stats.new(influxdb_client: InfluxDB::Client.new(options)).publish
+  Sidekiq::Metrics::Queues.new(influxdb_client: InfluxDB::Client.new(options)).publish
 end
 ```
 
@@ -117,7 +117,7 @@ Sidekiq::Metrics::Stats.new(
   series_name: 'sidekiq_stats',                   # optional, default shown
   retention_policy: nil,                          # optional, default nil
   tags: {},                                       # optional, default {}
-).call
+).publish
 ```
 
 For queues metrics:
@@ -130,7 +130,7 @@ Sidekiq::Metrics::Queues.new(
   series_name: 'sidekiq_queues',                  # optional, default shown
   retention_policy: nil,                          # optional, default nil
   tags: {},                                       # optional, default {}
-).call
+).publish
 ```
 
 When you run the scripts, you will get the following series in your InfluxDB database:
