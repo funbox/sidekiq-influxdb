@@ -1,5 +1,11 @@
 # Sidekiq-InfluxDB Changelog
 
+## 1.4.0 (2021-03-01)
+
+* Added queue sizes collection class
+* Added various Sidekiq internal statistics collection class
+* Added Ruby 3.0
+
 ## 1.3.0 (2020-09-23)
 
 * Dropped dependency on Bundler and Rake for development. The `gem` command is enough, really.
