@@ -95,7 +95,7 @@ Et cetera.
 
 ### Stats and Queues metrics
 
-To collect metrics for task stats and queues, you need to run the script periodically. For example you can use gem `clockwork`. You can add settings like this to `clock.rb`
+To collect metrics for task stats and queues, you need to run the following code periodically. For example, you can use the gem `clockwork` for that. You can add settings like this to `clock.rb`:
 
 ```ruby
 require "sidekiq/metrics/stats"
@@ -108,6 +108,7 @@ end
 ```
 
 For stats metrics:
+
 ```ruby
 require "sidekiq/metrics/stats"
 
@@ -120,6 +121,7 @@ Sidekiq::Metrics::Stats.new(
 ```
 
 For queues metrics:
+
 ```ruby
 require "sidekiq/metrics/queues"
 
