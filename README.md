@@ -4,7 +4,9 @@
 [![Travis CI](https://img.shields.io/travis/com/funbox/sidekiq-influxdb)](https://travis-ci.com/github/funbox/sidekiq-influxdb)
 [![Coveralls](https://img.shields.io/coveralls/funbox/sidekiq-influxdb.svg)](https://coveralls.io/github/funbox/sidekiq-influxdb)
 
-[Sidekiq](https://github.com/mperham/sidekiq/wiki) middleware that writes job lifecycle events as points to an [InfluxDB](http://docs.influxdata.com/influxdb/v1.3/) database.
+[Sidekiq](https://github.com/mperham/sidekiq/wiki) server middleware
+that writes job lifecycle events as points to an [InfluxDB](http://docs.influxdata.com/influxdb/v1.3/) database.
+Also includes classes that write global Sidekiq metrics and queue metrics.
 
 ## Installation
 
@@ -16,7 +18,24 @@ bundle add sidekiq-influxdb
 
 ## Usage
 
-Add included middleware to your application's Sidekiq middleware stack:
+Add included middleware to your application's Sidekiq middleware stack.
+The following examples assume that you already have an InfluxDB client object
+in the `influxdb` variable.
+This will create a middleware with all defaults (suitable for most deployments):
+
+```ruby
+# config/initializers/sidekiq.rb
+
+require "sidekiq/middleware/server/influxdb"
+
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.add Sidekiq::Middleware::Server::InfluxDB, influxdb_client: influxdb
+  end
+end
+```
+
+You can customize the middleware by passing more options:
 
 ```ruby
 # config/initializers/sidekiq.rb
@@ -26,17 +45,20 @@ require "sidekiq/middleware/server/influxdb"
 Sidekiq.configure_server do |config|
   config.server_middleware do |chain|
     chain.add Sidekiq::Middleware::Server::InfluxDB,
-                influxdb_client: InfluxDB::Client.new(options), # REQUIRED
-                series_name: 'sidekiq_jobs',                    # optional, default shown
-                retention_policy: nil,                          # optional, default nil
-                start_events: true,                             # optional, default true
-                tags: { application: 'MyApp' },                 # optional, default {}
-                except: [UnimportantJob1, UnimportantJob2]      # optional, default []
+                influxdb_client: influxdb,
+                series_name: 'sidekiq_jobs',  # This is the default one.
+                retention_policy: 'rp_name',  # In case you want to write metrics to a non-default RP.
+                start_events: true,           # Whether or not you want to know when jobs started. See `event` tag description below.
+                tags: {application: 'MyApp'}, # Anything you need on top. **Make sure that tag values have low cardinality!**
+                except: [UnimportantJob]      # These job classes will be executed without sending any metrics.
   end
 end
 ```
 
-You can learn how to create a client in [InfluxDB client documentation](https://github.com/influxdata/influxdb-ruby#creating-a-client).
+This library assumes that you already have an InfluxDB client object set up the way you like.
+It does not try to create one for you.
+If that is not the case, you can learn how to create a client
+in [InfluxDB client documentation](https://github.com/influxdata/influxdb-ruby#creating-a-client).
 
 **Warning:** This middleware is going to write _a lot_ of metrics.
 Set up your InfluxDB client accordingly:
@@ -44,7 +66,7 @@ Set up your InfluxDB client accordingly:
 * or install Telegraf, set up aggregation inside it, and set up InfluxDB client to send metrics to it,
 * or both.
 
-When you deploy this code, you will start getting the following series in your InfluxDB database:
+When you deploy this code, you will have the following series in your InfluxDB database:
 
 ```
 > select * from sidekiq_jobs
@@ -95,15 +117,22 @@ Et cetera.
 
 ### Stats and Queues metrics
 
-To collect metrics for task stats and queues, you need to run the following code periodically. For example, you can use the gem `clockwork` for that. You can add settings like this to `clock.rb`:
+To collect metrics for task stats and queues, you need to run the following code periodically.
+For example, you can use [Clockwork](https://rubygems.org/gems/clockwork) for that.
+You can add settings like this to `clock.rb`:
 
 ```ruby
 require "sidekiq/metrics/stats"
 require "sidekiq/metrics/queues"
 
+influx = InfluxDB::Client.new(options)
+
+sidekiq_global_metrics = Sidekiq::Metrics::Stats.new(influxdb_client: influx)
+sidekiq_queues_metrics = Sidekiq::Metrics::Queues.new(influxdb_client: influx)
+
 every(1.minute, 'sidekiq_metrics') do
-  Sidekiq::Metrics::Stats.new(influxdb_client: InfluxDB::Client.new(options)).publish
-  Sidekiq::Metrics::Queues.new(influxdb_client: InfluxDB::Client.new(options)).publish
+  sidekiq_global_metrics.publish
+  sidekiq_queues_metrics.publish
 end
 ```
 
@@ -133,7 +162,7 @@ Sidekiq::Metrics::Queues.new(
 ).publish
 ```
 
-When you run the scripts, you will get the following series in your InfluxDB database:
+When you run the code, you will have the following series in your InfluxDB database:
 
 ```
 > select * from sidekiq_stats
@@ -159,24 +188,10 @@ time                queue             size
 
 ### Grafana
 
-You can import the ready-made dashboard from [grafana_dashboard.json](grafana_dashboard.json).
+You can import a ready-made dashboard from [grafana_dashboard.json](grafana_dashboard.json).
 
 ## Development
 
-* [Sidekiq middleware](https://github.com/mperham/sidekiq/wiki/Middleware)
-* [InfluxDB client](https://github.com/influxdata/influxdb-ruby)
-
-After checking out the repo, run `bin/setup` to install dependencies.
-You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at [github.com/funbox/sidekiq-influxdb](https://github.com/funbox/sidekiq-influxdb).
-This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
-
-## Code of Conduct
-
-Everyone interacting in the `Sidekiq::InfluxDB` project’s codebases, issue trackers,
-chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/funbox/sidekiq-influxdb/blob/master/CODE_OF_CONDUCT.md).
+See [Contributing Guidelines](CONTRIBUTING.md).
 
 [![Sponsored by FunBox](https://funbox.ru/badges/sponsored_by_funbox_centered.svg)](https://funbox.ru)

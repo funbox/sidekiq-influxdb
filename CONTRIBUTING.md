@@ -1,7 +1,13 @@
 # Sidekiq-InfluxDB
 
+## Reference documentation
+
+* [Sidekiq middleware](https://github.com/mperham/sidekiq/wiki/Middleware)
+* [InfluxDB client](https://github.com/influxdata/influxdb-ruby)
+
 ## Contributing Guidelines
 
+1. We welcome addition of useful Sidekiq metrics and optimisations of the existing ones.
 1. All code should be covered by tests. This library is used in high load Sidekiq deployments. Failures are unacceptable.
 1. Code should be easy for an average Rubyist to understand.
 1. Each pull request should contain changes for a single goal.
