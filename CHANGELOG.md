@@ -1,5 +1,9 @@
 # Sidekiq-InfluxDB Changelog
 
+## 1.4.1 (2021-04-20)
+
+* Ruby 3 support
+
 ## 1.4.0 (2021-03-01)
 
 * Added queue sizes collection class
