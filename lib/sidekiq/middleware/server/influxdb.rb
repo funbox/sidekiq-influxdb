@@ -5,22 +5,14 @@ module Sidekiq
     module Server
       class InfluxDB
 
-        def initialize(
-          influxdb_client:,
-          series_name: 'sidekiq_jobs',
-          retention_policy: nil,
-          start_events: true,
-          tags: {},
-          except: [],
-          clock: -> { Time.now.to_f }
-        )
-          @influxdb = influxdb_client
-          @series = series_name
-          @retention = retention_policy
-          @start_events = start_events
-          @tags = tags
-          @secret_agents = class_names(except)
-          @clock = clock
+        def initialize(options = {})
+          @influxdb = options.fetch(:influxdb_client)
+          @series = options.fetch(:series_name, 'sidekiq_jobs')
+          @retention = options.fetch(:retention_policy, nil)
+          @start_events = options.fetch(:start_events, true)
+          @tags = options.fetch(:tags, {})
+          @secret_agents = class_names(options.fetch(:except, []))
+          @clock = options.fetch(:clock, -> { Time.now.to_f })
         end
 
         def call(_worker, msg, _queue)
