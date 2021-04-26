@@ -42,13 +42,7 @@ module Sidekiq
         private
 
         def class_names(except)
-          Set.new([except].flatten.map{|e| class_name(e) })
-        end
-
-        def class_name(class_or_name)
-          class_or_name.name
-        rescue NoMethodError
-          class_or_name
+          Set.new([except].flatten.map(&:to_s))
         end
 
         def job_class_name(msg)
