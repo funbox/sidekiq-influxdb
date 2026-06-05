@@ -154,4 +154,49 @@ RSpec.describe Sidekiq::Middleware::Server::InfluxDB do
         .call(nil, {'created_at' => t}, nil) { job.perform }
     end.to raise_error(Errno::ECONNREFUSED)
   end
+
+  context 'when created_at is epoch milliseconds (Sidekiq 8)' do
+    let(:created_at_ms) { 1_234_567_890_123 }
+    let(:created_at_s) { created_at_ms / 1000.0 }
+    let(:started_at) { created_at_s + 1 }
+    let(:finished_at) { created_at_s + 3 }
+
+    it 'converts timestamps to seconds for waited/worked metrics' do
+      expect(influxdb_client).to receive(:write_point).with("sidekiq_jobs", {
+        tags: { queue: 'foo', class: 'Worker', event: 'start' },
+        values: { jid: 'abc123', creation_time: created_at_s, waited: 1.0 },
+        timestamp: started_at.to_i
+      }, 's', nil).once
+
+      expect(influxdb_client).to receive(:write_point).with("sidekiq_jobs", {
+        tags: { queue: 'foo', class: 'Worker', event: 'finish' },
+        values: { jid: 'abc123', creation_time: created_at_s, waited: 1.0, worked: 2.0, total: 3.0 },
+        timestamp: finished_at.to_i
+      }, 's', nil).once
+
+      allow(clock).to receive(:call).and_return(started_at, finished_at)
+
+      described_class
+        .new(influxdb_client: influxdb_client, clock: clock)
+        .call(nil, {
+          'jid' => 'abc123',
+          'queue' => 'foo',
+          'class' => 'Worker',
+          'created_at' => created_at_ms
+        }, nil) { job.perform }
+    end
+  end
+
+  it 'writes measurement data under a custom key for InfluxDB 2 clients' do
+    expect(influxdb_client).to receive(:write_point) do |_s, data, _p, _r|
+      expect(data[:fields]).to eq({ jid: nil, creation_time: t, worked: 2.0, total: 2.0, waited: 0.0 })
+      expect(data).not_to have_key(:values)
+    end.once
+
+    allow(clock).to receive(:call).and_return(t, t + 2)
+
+    described_class
+      .new(influxdb_client: influxdb_client, start_events: false, measurement_key: :fields, clock: clock)
+      .call(nil, { 'created_at' => t }, nil) { job.perform }
+  end
 end

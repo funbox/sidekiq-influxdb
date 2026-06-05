@@ -1,5 +1,10 @@
 # Sidekiq-InfluxDB Changelog
 
+## 1.4.2 (2026-06-05)
+
+* Sidekiq 8 support: convert millisecond `created_at` (Integer) to seconds for `waited`, `creation_time`, and `total`
+* Added `measurement_key` option (`:values` by default, use `:fields` for InfluxDB 2 clients)
+
 ## 1.4.1 (2021-04-20)
 
 * Ruby 3 support

@@ -5,7 +5,8 @@
 [![Coveralls](https://img.shields.io/coveralls/funbox/sidekiq-influxdb.svg)](https://coveralls.io/github/funbox/sidekiq-influxdb)
 
 [Sidekiq](https://github.com/mperham/sidekiq/wiki) server middleware
-that writes job lifecycle events as points to an [InfluxDB](http://docs.influxdata.com/influxdb/v1.3/) database.
+that writes job lifecycle events as points to an [InfluxDB](http://docs.influxdata.com/influxdb/v1.3/) database
+(or any client with a compatible `write_point` API, including [InfluxDB 2](https://github.com/influxdata/influxdb-client-ruby)).
 Also includes classes that write global Sidekiq metrics and queue metrics.
 
 ## Installation
@@ -50,10 +51,31 @@ Sidekiq.configure_server do |config|
                 retention_policy: 'rp_name',  # In case you want to write metrics to a non-default RP.
                 start_events: true,           # Whether or not you want to know when jobs started. See `event` tag description below.
                 tags: {application: 'MyApp'}, # Anything you need on top. **Make sure that tag values have low cardinality!**
-                except: [UnimportantJob]      # These job classes will be executed without sending any metrics.
+                except: [UnimportantJob],     # These job classes will be executed without sending any metrics.
+                measurement_key: :values       # Use :fields for InfluxDB 2 clients. Default: :values.
   end
 end
 ```
+
+### Sidekiq 8
+
+Sidekiq 8 stores `created_at` as epoch **milliseconds** (Integer).
+Earlier versions used epoch **seconds** (Float).
+The middleware detects the format automatically — no configuration change is required when upgrading Sidekiq.
+
+### InfluxDB 2
+
+The default payload key is `values` (InfluxDB 1.x and the [`influxdb`](https://github.com/influxdata/influxdb-ruby) gem).
+InfluxDB 2 clients ([`influxdb-client`](https://github.com/influxdata/influxdb-client-ruby)) expect `fields` instead:
+
+```ruby
+chain.add Sidekiq::Middleware::Server::InfluxDB,
+  influxdb_client: my_influxdb2_client,
+  measurement_key: :fields
+```
+
+Your client must implement `write_point(series_name, data, precision, retention)` and accept a hash with
+`tags`, the configured measurement key (`values` or `fields`), and `timestamp`.
 
 This library assumes that you already have an InfluxDB client object set up the way you like.
 It does not try to create one for you.
@@ -88,7 +110,7 @@ Tags (repetitive indexed data; for filtering and grouping by):
 * `error` — if `event=error`, this tag contains the exception class name.
 * Your own tags from the initializer.
 
-Values (unique non-indexed data; for aggregation):
+Values / fields (unique non-indexed data; for aggregation; the key name depends on `measurement_key`):
 
 * `jid` — unique job ID.
 * `creation_time` — job creation time.
