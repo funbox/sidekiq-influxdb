@@ -5,6 +5,8 @@ module Sidekiq
     module Server
       class InfluxDB
 
+        MILLISECONDS_PER_SECOND = 1000.0
+
         def initialize(options = {})
           @influxdb = options.fetch(:influxdb_client)
           @series = options.fetch(:series_name, 'sidekiq_jobs')
@@ -13,6 +15,7 @@ module Sidekiq
           @tags = options.fetch(:tags, {})
           @secret_agents = class_names(options.fetch(:except, []))
           @clock = options.fetch(:clock, -> { Time.now.to_f })
+          @measurement_key = options.fetch(:measurement_key, :values)
         end
 
         def call(_worker, msg, _queue)
@@ -22,21 +25,23 @@ module Sidekiq
           end
 
           started_at = @clock.call
-          waited = started_at - msg['created_at']
-          record(started_at, msg, {event: 'start'}, {waited: waited}) if @start_events
+          waited = started_at - created_at_in_seconds(msg)
+          record(started_at, msg, { event: 'start' }, { waited: waited }) if @start_events
 
+          error = nil
           begin
             yield
-            tags = {event: 'finish'}
-          rescue => e
-            tags = {event: 'error', error: e.class.name}
+            tags = { event: 'finish' }
+          rescue StandardError => e
+            tags = { event: 'error', error: e.class.name }
+            error = e
           end
 
           finished_at = @clock.call
           worked = finished_at - started_at
-          record(finished_at, msg, tags, {waited: waited, worked: worked, total: waited + worked})
+          record(finished_at, msg, tags, { waited: waited, worked: worked, total: waited + worked })
 
-          raise e if e
+          raise error if error
         end
 
         private
@@ -49,16 +54,23 @@ module Sidekiq
           msg['wrapped'] || msg['class']
         end
 
-        def record(t, msg, tags, values = {})
+        def created_at_in_seconds(msg)
+          created_at = msg['created_at']
+          return created_at unless created_at.is_a?(Integer)
+
+          created_at / MILLISECONDS_PER_SECOND
+        end
+
+        def record(t, msg, tags, measurement = {})
           save(
             tags: {
               class: job_class_name(msg),
               queue: msg['queue']
             }.merge(tags).merge(@tags),
-            values: {
+            @measurement_key => {
               jid: msg['jid'],
-              creation_time: msg['created_at']
-            }.merge(values),
+              creation_time: created_at_in_seconds(msg)
+            }.merge(measurement),
             timestamp: in_correct_precision(t)
           )
         end
